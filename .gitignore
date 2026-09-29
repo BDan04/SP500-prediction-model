@@ -1,0 +1,16 @@
+# Data (downloaded at runtime, not redistributed)
+data/
+*.csv
+*.parquet
+
+# Secrets
+.env
+
+# Jupyter / Python
+.ipynb_checkpoints/
+__pycache__/
+*.pyc
+
+# OS
+.DS_Store
+Thumbs.db
