@@ -100,8 +100,8 @@ Top drivers by out-of-sample permutation importance: **5-year yield (FVX)**, **S
 
 ## How to Run
 ```bash
-git clone https://github.com/<your-username>/<repo-name>.git
-cd <repo-name>
+git clone https://github.com/BDan04/SP500-prediction-model.git
+cd SP500-prediction-model
 pip install -r requirements.txt
 jupyter notebook notebooks/capstone_analysis.ipynb
 ```
