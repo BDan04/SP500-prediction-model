@@ -6,10 +6,10 @@ This project builds a machine-learning signal that ranks upcoming 5-day windows 
 
 ## Key Findings
 
-- **The signal has modest but real predictive power.** Expanding walk-forward IC is **0.091** and stitched out-of-sample IC is **0.062**, positive in every cross-validation fold.
-- **It is strongest when markets are volatile.** IC rises from 0.039 in the lowest-volatility quartile to 0.083 in the highest.
-- **The predictions separate returns.** The top decile of predictions averaged +0.54% over the next 5 days, compared with +0.03% for the bottom decile.
-- **The overlay improves timing, not total return.** The volatility-targeted overlay reaches a Sharpe of about **0.82** while invested roughly 76% of the time. It trails buy-and-hold on total return (4.8x vs 7.3x) because it sits out part of a strong bull market.
+- **The signal has modest but real predictive power.** Expanding walk-forward IC is **0.089** and stitched out-of-sample IC is **0.063**, positive in every cross-validation fold.
+- **It is strongest when markets are volatile.** IC rises from 0.034 in the lowest-volatility quartile to 0.084 in the highest.
+- **The predictions separate returns.** The top decile of predictions averaged +0.50% over the next 5 days, compared with +0.05% for the bottom decile.
+- **The overlay improves timing, not total return.** The volatility-targeted overlay reaches a Sharpe of about **0.85** while invested roughly 76% of the time. It trails buy-and-hold on total return (5.1x vs 7.3x) because it sits out part of a strong bull market.
 
 ## Data
 
@@ -52,33 +52,34 @@ Data is downloaded when the notebook runs. No raw data is stored in this reposit
 ### Predictive power (out of sample)
 | Metric | Value |
 |---|---|
-| Expanding walk-forward IC (HGBR, pruned features) | **0.091** |
-| Stitched OOS IC, HGBR (68 / 58 features) | 0.062 / 0.063 |
+| Expanding walk-forward IC (HGBR, pruned features) | **0.089** |
+| Stitched OOS IC, HGBR (68 / 58 features) | 0.061 / 0.063 |
 | Stitched OOS IC, Ridge | 0.058 |
-| Rolling IC, mean | 0.083 |
-| LSTM walk-forward IC | 0.013 |
+| Rolling IC, mean | 0.081 |
+| LSTM walk-forward IC | 0.057 |
 | Direction classifiers (AUC) | ~0.50 to 0.51 |
 
-The tree model beats both the linear baseline and the LSTM. Classifiers that predict only up or down have no edge. The signal is useful for **ranking** expected returns, not for calling direction.
+The tree model edges out both the linear baseline and the LSTM. Classifiers that predict only up or down have no edge. The signal is useful for **ranking** expected returns, not for calling direction.
 
 ### IC by volatility regime (SPY 20-day volatility quartile)
 | Quartile | Lowest | 2 | 3 | Highest |
 |---|---|---|---|---|
-| IC | 0.039 | 0.061 | 0.071 | 0.083 |
+| IC | 0.034 | 0.055 | 0.071 | 0.084 |
 
 ### Overlay strategy (non-overlapping 5-day trades, 5 bps costs)
 | Strategy | Sharpe | Total Return | Avg. Exposure |
 |---|---|---|---|
 | Buy & Hold SPY | — | 7.34x | 100% |
-| Overlay, best threshold rule (pruned) | 0.72 | 4.61x | 63% |
-| Overlay, volatility-targeted (15%) | **0.82** | 4.82x | 76% |
+| Overlay, best threshold rule (pruned) | 0.74 | 4.92x | 63% |
+| Overlay, volatility-targeted (15%) | **0.85** | 5.11x | 76% |
 
 ### Most important features
-Top drivers by out-of-sample permutation importance: **5-year yield (FVX)**, **SPY 20-day momentum**, **VIX9D**, **SPY 20-day drawdown**, **oil**, **S&P futures returns** and **10-year yield changes**. No single feature dominates, which supports using a nonlinear model.
+Top drivers by out-of-sample permutation importance: **5-year yield (FVX)**, **SPY 20-day momentum**, **VIX9D**, **SPY 20-day drawdown**, **oil**, **10-year yield changes** and **S&P futures returns**. No single feature dominates, which supports using a nonlinear model.
 
 ## Limitations
 - An IC below 0.10 is typical for short-horizon equity prediction, but it leaves a thin margin after costs.
 - The overlay does not beat buy-and-hold on total return over 2005 to 2026, a period with a strong upward trend.
+- GDP and CPI are aligned by observation date, not release date. GDP for a quarter is published about a month after the quarter ends, so the macro features contain a small look-ahead. Pruning removed the CPI features, but the GDP-based features remain in the model.
 - VIX9D history starts in 2011, so early folds train without VIX term-structure features.
 - Results come from one asset (SPY) and one horizon (5 days).
 
@@ -107,6 +108,11 @@ jupyter notebook notebooks/capstone_analysis.ipynb
 Run all cells from top to bottom. Data downloads automatically. The LSTM walk-forward cell takes about 80 minutes on a CPU. You can skip it to reproduce every other result.
 
 **Requirements:** Python 3.10+, pandas, numpy, scikit-learn, scipy, matplotlib, yfinance, pandas-datareader, fredapi, tensorflow
+
+## Reproducibility
+- **Frozen data window:** market and macro data run from 2005-01-01 through **2026-09-29**, the date the results in this README were produced. To run on the latest data, set `END = None` and the FRED `end` to `dt.datetime.today()` in the data cell.
+- **Fixed random seeds:** scikit-learn models use `random_state=42`. The LSTM uses `tf.random.set_seed(42)` and `np.random.seed(42)`.
+- **Expect small differences:** Yahoo Finance recalculates historical adjusted prices after each dividend, and FRED revises past GDP and CPI values. Re-running the notebook should produce results very close to those above, but not always identical. TensorFlow results can also vary slightly by hardware.
 
 ## Author
 **Brandon Daniels** · Capstone Project · 2026
