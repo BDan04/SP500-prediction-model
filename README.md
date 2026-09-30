@@ -2,9 +2,26 @@
 
 Can cross-asset macro signals improve **5-day S&P 500 (SPY) timing**?
 
-This project builds a machine-learning signal that ranks upcoming 5-day windows for SPY using rates, volatility term structure, currencies, commodities, global equity indices and macro data (GDP, CPI). It then tests whether the signal works as a tactical overlay on an equity position.
+## Summary
 
-The first version of this analysis, presented in February 2026, reported a Sharpe ratio of about 2.1 against 0.67 for buy-and-hold. A later review found three sources of look-ahead bias in the validation. **After correcting them, the strategy no longer beats buy-and-hold.** This repository contains the corrected analysis, and the "What Changed" section explains the difference.
+This project asks whether market and economic data, such as interest rates, volatility, currencies, commodities, GDP and inflation, can predict the S&P 500's return over the next week, and whether that prediction can improve on simply buying and holding.
+
+I built a full pipeline in Python. It pulls about 20 years of daily data from Yahoo Finance and the Federal Reserve (FRED), engineers 70 features, trains and compares three machine-learning models, and backtests the signal as a trading strategy with realistic costs and risk controls.
+
+**The result:** the signal showed promise in standard testing but did not beat buy-and-hold under a stricter, real-world test. After presenting the first version, I found and corrected three sources of look-ahead bias (the model had indirectly "seen" future data), and the corrected results are reported below. The strategy did reduce drawdowns and downside risk, mainly by holding less stock.
+
+**Skills demonstrated**
+- **Data pipeline:** Python (pandas, NumPy) with Yahoo Finance and FRED data, cleaned and aligned into one daily dataset
+- **Feature engineering:** returns, volatility, momentum, yield curves, VIX term structure and macro growth rates, with release lags to avoid using data before it was public
+- **Machine learning:** scikit-learn (Ridge, HistGradientBoosting, MLP), time-series cross-validation and walk-forward retraining
+- **Performance and risk analysis:** Sharpe ratio, CAGR, drawdowns, VaR/CVaR, stress tests and transaction-cost sensitivity
+- **Validation and self-review:** found, fixed and documented flaws in my own original results
+
+![Tear sheet: buy-and-hold vs. HGBR overlay at a 10% volatility target, showing equity curves, drawdowns and rolling 12-month Sharpe ratio](images/tear_sheet.png)
+
+*Buy-and-hold (blue) vs. the model-driven overlay (orange), both scaled to the same 10% volatility target. The overlay grows more slowly but has shallower drawdowns.*
+
+---
 
 ## Key Findings (corrected)
 
@@ -15,6 +32,8 @@ The first version of this analysis, presented in February 2026, reported a Sharp
 - **Recent performance is better.** Over the last five years (8% volatility target), the overlay's Sharpe is about 1.0. That is too short a period to draw conclusions from.
 
 ## What Changed After the Presentation
+
+The first version of this analysis, presented in February 2026, reported a Sharpe ratio of about 2.1 against 0.67 for buy-and-hold. A later review found three sources of look-ahead bias in the validation. **After correcting them, the strategy no longer beats buy-and-hold.**
 
 | Metric | As presented (original code) | Corrected |
 |---|---|---|
@@ -108,13 +127,26 @@ The gap between the cross-validation and walk-forward results is the main findin
 - Look-ahead bias can come from feature selection, not just from the data itself.
 - The drawdown and tail-risk reductions are real, but they come mostly from holding less equity, not from better timing.
 
+## Glossary
+- **IC (information coefficient):** the correlation between the model's predictions and actual returns. Zero means no predictive power.
+- **Sharpe ratio:** return earned per unit of risk. Higher is better.
+- **CAGR:** compound annual growth rate.
+- **Max drawdown:** the largest peak-to-trough loss.
+- **VaR / CVaR:** the loss on a bad week (5th percentile) and the average loss beyond that point.
+- **Walk-forward test:** retraining the model through time using only data available at each date, the closest simulation of real use.
+- **Look-ahead bias:** when a backtest accidentally uses information that would not have been known at the time.
+
 ## Repository Structure
 ```
 ├── README.md
 ├── requirements.txt
 ├── .gitignore
-└── notebooks/
-    └── capstone_analysis.ipynb
+├── images/
+│   └── tear_sheet.png
+├── notebooks/
+│   └── capstone_analysis.ipynb
+└── presentation/
+    └── Capstone_Final_Revised.pdf
 ```
 
 ## How to Run
@@ -124,7 +156,7 @@ cd SP500-prediction-model
 pip install -r requirements.txt
 jupyter notebook notebooks/capstone_analysis.ipynb
 ```
-Run all cells from top to bottom. Data downloads automatically. The walk-forward cells retrain the models about 1,000 times, so a full run takes a while.
+Run all cells from top to bottom. Data downloads automatically. The FRED data needs a free API key from [fred.stlouisfed.org](https://fred.stlouisfed.org/docs/api/api_key.html), set as the `FRED_API_KEY` environment variable. The walk-forward cells retrain the models about 1,000 times, so a full run takes a while.
 
 ## Reproducibility
 - **Frozen data window:** 2005-01-01 through **2026-09-29**. To use the latest data, set `END = None` in the data cell.
@@ -132,5 +164,7 @@ Run all cells from top to bottom. Data downloads automatically. The walk-forward
 - **Expect small differences:** Yahoo Finance recalculates historical adjusted prices after dividends, and FRED revises past GDP and CPI values, so re-running may give slightly different numbers.
 
 ## Author
-**Brandon Daniels** · Capstone Project · 2026
+**Brandon Daniels** · Capstone Project, UTSA Data Science & AI Boot Camp · 2026
+[LinkedIn](https://www.linkedin.com/in/bldaniels042488)
+
 *For research and educational purposes only. Not investment advice.*
